@@ -26,6 +26,7 @@ public abstract class PaddleController : MonoBehaviour, ICollidable
        if(collision.gameObject.CompareTag("Ball"))
         {
          Debug.Log($"{gameObject.name} was hit by the ball!");
+         
         }
     }
 }
