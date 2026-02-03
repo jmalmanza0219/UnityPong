@@ -12,7 +12,7 @@ public class BallMovement : MonoBehaviour, ICollidable
     public float Speed
     {
         get { return speed; }
-        set { speed = Mathf.Max(0f, value); }
+        set { speed = Mathf.Max(1f, value); }
     }
 
     public Vector2 Direction
@@ -53,6 +53,7 @@ public class BallMovement : MonoBehaviour, ICollidable
         {
             // Reverse the horizontal direction
             Direction = new Vector2(-Direction.x, Direction.y);
+            Speed += 2f; 
         }
         else if (collision.gameObject.CompareTag("Wall"))
         {
