@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
 
-public class BallMovement : MonoBehaviour, ICollidable
+public class BallMovement : NetworkBehaviour, ICollidable
 {
     private Rigidbody2D rb;
 
@@ -22,17 +23,34 @@ public class BallMovement : MonoBehaviour, ICollidable
     }
 
     
-    void Start()
+    void Awake()
     {
         
         rb = GetComponent<Rigidbody2D>();
-        Direction = direction;
+       
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        if (IsServer)
+        {
+           LaunchBall();
+        }
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
+        if (IsServer)
+        {
         rb.velocity = Direction * Speed;
+        }
+    }
+
+    private void LaunchBall()
+    {
+      direction = new Vector2(Random.value < 0.5f ? -1f : 1f, Random.Range(-0.5f, 0.5f)).normalized;
+       rb.velocity = Direction * Speed;
     }
 
     void OnCollisionEnter2D(Collision2D collision)
@@ -49,6 +67,7 @@ public class BallMovement : MonoBehaviour, ICollidable
 
     public void OnHit(Collision2D collision)
     {
+        if (!IsServer) return;
       if (collision.gameObject.CompareTag("Paddle"))
         {
             // Reverse the horizontal direction
