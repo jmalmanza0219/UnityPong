@@ -17,10 +17,9 @@
 *.blend1.meta
 
 # MemoryCaptures can get excessive in size.
-# They also could contain extremely sensitive data
 /[Mm]emoryCaptures/
 
-# Recordings can get excessive in size
+# Recordings can get excessive in size.
 /[Rr]ecordings/
 
 # Uncomment this line if you wish to ignore the asset store tools plugin
@@ -84,9 +83,6 @@ InitTestScene*.unity*
 /[Aa]ssets/StreamingAssets/aa*
 /[Aa]ssets/AddressableAssetsData/link.xml*
 /[Aa]ssets/Addressables_Temp*
-# By default, Addressables content builds will generate addressables_content_state.bin
-# files in platform-specific subfolders, for example:
-# /Assets/AddressableAssetsData/OSX/addressables_content_state.bin
 /[Aa]ssets/AddressableAssetsData/*/*.bin*
 
 # Visual Scripting auto-generated files
@@ -97,3 +93,14 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# ParrelSync clones
+Pong_clone_*/
+
+# User settings (editor layouts, personal prefs)
+UserSettings/
+UserSettings/*.user
+
+# Blender backups
+*.blend1
+*.blend1.meta
