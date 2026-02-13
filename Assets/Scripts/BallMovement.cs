@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
 
-public class BallMovement : MonoBehaviour
+public class BallMovement : NetworkBehaviour, ICollidable
 {
     private Rigidbody2D rb;
 
@@ -12,7 +13,7 @@ public class BallMovement : MonoBehaviour
     public float Speed
     {
         get { return speed; }
-        set { speed = Mathf.Max(0f, value); }
+        set { speed = Mathf.Max(1f, value); }
     }
 
     public Vector2 Direction
@@ -21,22 +22,63 @@ public class BallMovement : MonoBehaviour
         set { direction = value.normalized; }
     }
 
-    void Start()
+    
+    void Awake()
     {
+        
         rb = GetComponent<Rigidbody2D>();
+       
     }
 
+    public override void OnNetworkSpawn()
+    {
+        if (IsServer)
+        {
+           LaunchBall();
+        }
+    }
+
+    // Update is called once per frame
     void FixedUpdate()
     {
-        rb.velocity = direction * speed;
+        if (IsServer)
+        {
+        rb.velocity = Direction * Speed;
+        }
+    }
+
+    private void LaunchBall()
+    {
+      direction = new Vector2(Random.value < 0.5f ? -1f : 1f, Random.Range(-0.5f, 0.5f)).normalized;
+       rb.velocity = Direction * Speed;
     }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Paddle"))
-            Direction = new Vector2(-direction.x, direction.y);
+       ICollidable collidable = collision.gameObject.GetComponent<ICollidable>();
+        if (collidable != null)
+        {
+            collidable.OnHit(collision);
+        }
 
-        if (collision.gameObject.CompareTag("Wall"))
-            Direction = new Vector2(direction.x, -direction.y);
+        OnHit(collision);
     }
+
+
+    public void OnHit(Collision2D collision)
+    {
+        if (!IsServer) return;
+      if (collision.gameObject.CompareTag("Paddle"))
+        {
+            // Reverse the horizontal direction
+            Direction = new Vector2(-Direction.x, Direction.y);
+            Speed += 2f; 
+        }
+        else if (collision.gameObject.CompareTag("Wall"))
+        {
+            // Reverse the vertical direction
+            Direction = new Vector2(Direction.x, -Direction.y);
+        }
+    }
+    
 }
