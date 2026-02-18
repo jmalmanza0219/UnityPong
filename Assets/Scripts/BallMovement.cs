@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 
@@ -8,77 +6,86 @@ public class BallMovement : NetworkBehaviour, ICollidable
     private Rigidbody2D rb;
 
     [SerializeField] private float speed = 5f;
-    private Vector2 direction = new Vector2(1f, 1f);
+    private Vector2 direction = new Vector2(1f, 0f);
 
     public float Speed
     {
-        get { return speed; }
-        set { speed = Mathf.Max(1f, value); }
+        get => speed;
+        set => speed = Mathf.Max(0f, value);
     }
 
     public Vector2 Direction
     {
-        get { return direction; }
-        set { direction = value.normalized; }
+        get => direction;
+        set => direction = value.normalized;
     }
 
-    
-    void Awake()
+    private void Awake()
     {
-        
         rb = GetComponent<Rigidbody2D>();
-       
     }
 
     public override void OnNetworkSpawn()
     {
-        if (IsServer)
-        {
-           LaunchBall();
-        }
+        // Do NOT launch here. GameManager controls serving.
     }
 
-    // Update is called once per frame
-    void FixedUpdate()
+    private void FixedUpdate()
+{
+    if (!IsServer) return;
+
+    if (GameManager.Instance != null &&
+        (!GameManager.Instance.gameStarted.Value || GameManager.Instance.gameOver.Value))
     {
-        if (IsServer)
-        {
-        rb.velocity = Direction * Speed;
-        }
+        rb.velocity = Vector2.zero;
+        return;
     }
 
-    private void LaunchBall()
+    rb.velocity = Direction * Speed;
+}
+
+    // Called by GameManager (server only)
+    public void Serve(Vector2 serveDirection, float serveSpeed)
     {
-      direction = new Vector2(Random.value < 0.5f ? -1f : 1f, Random.Range(-0.5f, 0.5f)).normalized;
-       rb.velocity = Direction * Speed;
+        if (!IsServer) return;
+
+        rb.velocity = Vector2.zero;
+        transform.position = Vector3.zero;
+
+        Speed = serveSpeed;
+        Direction = serveDirection.normalized;
     }
 
-    void OnCollisionEnter2D(Collision2D collision)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-       ICollidable collidable = collision.gameObject.GetComponent<ICollidable>();
+        ICollidable collidable = collision.gameObject.GetComponent<ICollidable>();
         if (collidable != null)
-        {
             collidable.OnHit(collision);
-        }
 
         OnHit(collision);
     }
 
-
     public void OnHit(Collision2D collision)
     {
         if (!IsServer) return;
-      if (collision.gameObject.CompareTag("Paddle"))
+
+        if (collision.gameObject.CompareTag("Paddle"))
         {
-            // Reverse the horizontal direction
             Direction = new Vector2(-Direction.x, Direction.y);
-            Speed += 2f; 
+            Speed += 2f;
         }
         else if (collision.gameObject.CompareTag("Wall"))
         {
-            // Reverse the vertical direction
             Direction = new Vector2(Direction.x, -Direction.y);
         }
     }
-    
+
+    public void StopBall()
+    {
+        if (!IsServer) return;
+
+        Speed = 0f;
+        Direction = Vector2.zero;
+        rb.velocity = Vector2.zero;
+    }
 }
